@@ -15,7 +15,8 @@ var (
 )
 
 func main() {
-	log.Printf("Serving to http://localhost:%s/", port)
+	port := 8080
+	log.Printf("Serving to http://localhost:%d/", port)
 
 	r := chi.NewRouter()
 
@@ -35,7 +36,16 @@ func main() {
 		finalResponseJson, _ := json.Marshal(finalResponse)
 		w.Write(finalResponseJson)
 	})
-	log.Println("Starting up on own")
+	r.Route("/receipts", func(r chi.Router) {
+		r.Route("/process", func(r chi.Router) {
+			r.Use(ReceiptValidator)
+			r.Post("/", processReceipt)
+		})
+		r.Route("/{id}", func(r chi.Router) {
+			r.Get("/points", getPoints)
+		})
+
+	})
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
