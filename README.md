@@ -1,4 +1,4 @@
-$ Fetch Assignment
+# Fetch Assignment
 
 This repository is an API for receipt processot.
 
