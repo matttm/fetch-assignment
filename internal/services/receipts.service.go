@@ -74,7 +74,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 		points += 10
 	}
 	// store in db
-	id := len(db) + 1
+	var id int64 = int64(len(db) + 1)
 	db[id] = &models.Transaction{
 		Id:      id,
 		Receipt: receipt,

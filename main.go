@@ -2,17 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fetch-assignment/internal/controllers"
 	"log"
 	"net/http"
-	"os"
 
 	chi "github.com/go-chi/chi/v5"
 	cors "github.com/rs/cors"
 )
 
-var (
-	apiGateWayURL string = os.Getenv("API_GATEWAY_URL")
-)
+var ()
 
 func main() {
 	port := 8080
@@ -38,11 +36,11 @@ func main() {
 	})
 	r.Route("/receipts", func(r chi.Router) {
 		r.Route("/process", func(r chi.Router) {
-			r.Use(ReceiptValidator)
-			r.Post("/", processReceipt)
+			// r.Use(ReceiptValidator)
+			r.Post("/", controllers.ProcessReceipts)
 		})
 		r.Route("/{id}", func(r chi.Router) {
-			r.Get("/points", getPoints)
+			r.Get("/points", controllers.GetPoints)
 		})
 
 	})
