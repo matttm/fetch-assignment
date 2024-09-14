@@ -1,15 +1,25 @@
 package services
 
 import (
+	"errors"
 	"math"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"fetch-assignment/internal/models"
 )
 
-func ProcessReceipts(receipt *models.Receipt) bool {
+var DATE_FORMAT = "2022-01-01"
+var TIME_FORMAT = "13:01"
+var BEFORE, _ = time.Parse(TIME_FORMAT, "16:00")
+var AFTER, _ = time.Parse(TIME_FORMAT, "14:00")
+
+// for sake of time, we'll use an in-memory db
+var db = make(map[int64]*models.Transaction)
+
+func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 	points := 0
 	// One point for every alphanumeric character in the retailer name.
 	for _, r := range receipt.Retailer {
@@ -17,8 +27,9 @@ func ProcessReceipts(receipt *models.Receipt) bool {
 			points++
 		}
 	}
-	total, err := strconv.ParseFloat(receipt.Total)
+	total, err := strconv.ParseFloat(receipt.Total, 32)
 	if err != nil {
+		return false, errors.New("Total cannot be parsed")
 	}
 	dollars := int(total)
 	decimal := total - float64(dollars)
@@ -37,14 +48,47 @@ func ProcessReceipts(receipt *models.Receipt) bool {
 	for _, item := range receipt.Items {
 		description := strings.TrimSpace(item.ShortDesc)
 		if len([]rune(description))%3 == 0 {
-			price = math.Ceil(receipt.Price * 0.2)
+			price, err := strconv.ParseFloat(item.Price, 32)
+			if err != nil {
+				return false, errors.New("Price cannot be parsed")
+			}
+			points += int(math.Ceil(price * 0.2))
 		}
 
 	}
+	// 6 points if the day in the purchase date is odd.
+	date, err := time.Parse(DATE_FORMAT, receipt.PurchaseDate)
+	if err != nil {
+		return false, errors.New("Purchase date cannot be parsed")
+	}
+	day := date.Weekday()
+	if int(day)%2 == 1 {
+		points += 6
+	}
+	// 10 points if the time of purchase is after 2:00pm and before 4:00pm
+	purchaseTime, err := time.Parse(TIME_FORMAT, receipt.PurchaseTime)
+	if err != nil {
+		return false, errors.New("Purchase date cannot be parsed")
+	}
+	if purchaseTime.After(AFTER) && purchaseTime.Before(BEFORE) {
+		points += 10
+	}
+	// store in db
+	id := len(db) + 1
+	db[id] = &models.Transaction{
+		Id:      id,
+		Receipt: receipt,
+		Points:  points,
+	}
+	return true, nil
 }
 
-func GetPoints(id int) (int, error) {
-	return 0, nil
+func GetPoints(id int64) (int, error) {
+	if db[id] == nil {
+		return db[id].Points, nil
+	} else {
+		return 0, errors.New("No such receipt")
+	}
 }
 
 func isAlphanumeric(r rune) bool {
