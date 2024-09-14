@@ -19,7 +19,7 @@ var AFTER, _ = time.Parse(TIME_FORMAT, "14:00")
 // for sake of time, we'll use an in-memory db
 var db = make(map[int64]*models.Transaction)
 
-func ProcessReceipts(receipt *models.Receipt) (bool, error) {
+func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	points := 0
 	// One point for every alphanumeric character in the retailer name.
 	for _, r := range receipt.Retailer {
@@ -29,7 +29,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 	}
 	total, err := strconv.ParseFloat(receipt.Total, 32)
 	if err != nil {
-		return false, errors.New("Total cannot be parsed")
+		return -1, errors.New("Total cannot be parsed")
 	}
 	dollars := int(total)
 	decimal := total - float64(dollars)
@@ -50,7 +50,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 		if len([]rune(description))%3 == 0 {
 			price, err := strconv.ParseFloat(item.Price, 32)
 			if err != nil {
-				return false, errors.New("Price cannot be parsed")
+				return -1, errors.New("Price cannot be parsed")
 			}
 			points += int(math.Ceil(price * 0.2))
 		}
@@ -59,7 +59,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse(DATE_FORMAT, receipt.PurchaseDate)
 	if err != nil {
-		return false, errors.New("Purchase date cannot be parsed")
+		return -1, errors.New("Purchase date cannot be parsed")
 	}
 	day := date.Weekday()
 	if int(day)%2 == 1 {
@@ -68,7 +68,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm
 	purchaseTime, err := time.Parse(TIME_FORMAT, receipt.PurchaseTime)
 	if err != nil {
-		return false, errors.New("Purchase date cannot be parsed")
+		return -1, errors.New("Purchase date cannot be parsed")
 	}
 	if purchaseTime.After(AFTER) && purchaseTime.Before(BEFORE) {
 		points += 10
@@ -80,7 +80,7 @@ func ProcessReceipts(receipt *models.Receipt) (bool, error) {
 		Receipt: receipt,
 		Points:  points,
 	}
-	return true, nil
+	return id, nil
 }
 
 func GetPoints(id int64) (int, error) {

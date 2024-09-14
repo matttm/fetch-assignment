@@ -13,13 +13,21 @@ import (
 func ProcessReceipts(w http.ResponseWriter, req *http.Request) {
 	var receipt models.Receipt
 	receiptJson := req.Body
-	err := json.NewDecoder(receiptJson).Decode(receipt)
+	err := json.NewDecoder(receiptJson).Decode(&receipt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	services.ProcessReceipts(&receipt)
-	w.Write([]byte("Receipt Processed"))
+	id, err := services.ProcessReceipts(&receipt)
+	res := models.TransactionIdResponse{
+		Id: id,
+	}
+	b, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Write(b)
 
 }
 
@@ -31,5 +39,13 @@ func GetPoints(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	points, err := services.GetPoints(receiptId)
-	w.Write([]byte(strconv.Itoa(points)))
+	res := models.GetPointsResponse{
+		Points: points,
+	}
+	b, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Write(b)
 }
