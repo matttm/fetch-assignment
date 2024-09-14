@@ -19,6 +19,10 @@ func ProcessReceipts(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	id, err := services.ProcessReceipts(&receipt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	res := models.TransactionIdResponse{
 		Id: id,
 	}

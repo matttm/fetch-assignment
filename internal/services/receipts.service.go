@@ -8,16 +8,12 @@ import (
 	"time"
 	"unicode"
 
+	"fetch-assignment/internal/database"
 	"fetch-assignment/internal/models"
 )
 
-var DATE_FORMAT = "2022-01-01"
-var TIME_FORMAT = "13:01"
-var BEFORE, _ = time.Parse(TIME_FORMAT, "16:00")
-var AFTER, _ = time.Parse(TIME_FORMAT, "14:00")
-
-// for sake of time, we'll use an in-memory db
-var db = make(map[int64]*models.Transaction)
+var DATE_FORMAT = "2006-01-02"
+var TIME_FORMAT = "15:04"
 
 func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	points := 0
@@ -56,10 +52,18 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 		}
 
 	}
+	BEFORE, err := time.Parse(TIME_FORMAT, "16:00")
+	if err != nil {
+		return -1, err // errors.New("Purchase date cannot be parsed")
+	}
+	AFTER, err := time.Parse(TIME_FORMAT, "14:00")
+	if err != nil {
+		return -1, err // errors.New("Purchase date cannot be parsed")
+	}
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse(DATE_FORMAT, receipt.PurchaseDate)
 	if err != nil {
-		return -1, errors.New("Purchase date cannot be parsed")
+		return -1, err // errors.New("Purchase date cannot be parsed")
 	}
 	day := date.Weekday()
 	if int(day)%2 == 1 {
@@ -68,22 +72,23 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm
 	purchaseTime, err := time.Parse(TIME_FORMAT, receipt.PurchaseTime)
 	if err != nil {
-		return -1, errors.New("Purchase date cannot be parsed")
+		return -1, err // errors.New("Purchase time cannot be parsed")
 	}
 	if purchaseTime.After(AFTER) && purchaseTime.Before(BEFORE) {
 		points += 10
 	}
 	// store in db
+	db := database.GetInstance().TxTable
 	var id int64 = int64(len(db) + 1)
-	db[id] = &models.Transaction{
-		Id:      id,
-		Receipt: receipt,
-		Points:  points,
-	}
+	db[id] = new(models.Transaction)
+	db[id].Id = id
+	db[id].Receipt = receipt
+	db[id].Points = points
 	return id, nil
 }
 
 func GetPoints(id int64) (int, error) {
+	db := database.GetInstance().TxTable
 	if db[id] == nil {
 		return db[id].Points, nil
 	} else {
