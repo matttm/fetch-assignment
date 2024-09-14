@@ -7,7 +7,7 @@ import (
 )
 
 type Database struct {
-	TxTable map[int64]*models.Transaction
+	TxTable map[string]*models.Transaction
 }
 
 var lock = &sync.Mutex{}
@@ -20,7 +20,7 @@ func GetInstance() *Database {
 		defer lock.Unlock()
 		if instance == nil {
 			instance = &Database{}
-			instance.TxTable = make(map[int64]*models.Transaction)
+			instance.TxTable = make(map[string]*models.Transaction)
 		} else {
 			fmt.Println("Single instance already created.")
 		}

@@ -1,7 +1,7 @@
 package models
 
 type Transaction struct {
-	Id      int64
+	Id      string
 	Receipt *Receipt
 	Points  int
 }

@@ -15,7 +15,7 @@ import (
 var DATE_FORMAT = "2006-01-02"
 var TIME_FORMAT = "15:04"
 
-func ProcessReceipts(receipt *models.Receipt) (int64, error) {
+func ProcessReceipts(receipt *models.Receipt) (string, error) {
 	points := 0
 	// One point for every alphanumeric character in the retailer name.
 	for _, r := range receipt.Retailer {
@@ -25,7 +25,7 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	}
 	total, err := strconv.ParseFloat(receipt.Total, 32)
 	if err != nil {
-		return -1, errors.New("Total cannot be parsed")
+		return "-1", errors.New("Total cannot be parsed")
 	}
 	dollars := int(total)
 	decimal := total - float64(dollars)
@@ -46,7 +46,7 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 		if len([]rune(description))%3 == 0 {
 			price, err := strconv.ParseFloat(item.Price, 32)
 			if err != nil {
-				return -1, errors.New("Price cannot be parsed")
+				return "-1", errors.New("Price cannot be parsed")
 			}
 			points += int(math.Ceil(price * 0.2))
 		}
@@ -54,16 +54,16 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	}
 	BEFORE, err := time.Parse(TIME_FORMAT, "16:00")
 	if err != nil {
-		return -1, err // errors.New("Purchase date cannot be parsed")
+		return "-1", err // errors.New("Purchase date cannot be parsed")
 	}
 	AFTER, err := time.Parse(TIME_FORMAT, "14:00")
 	if err != nil {
-		return -1, err // errors.New("Purchase date cannot be parsed")
+		return "-1", err // errors.New("Purchase date cannot be parsed")
 	}
 	// 6 points if the day in the purchase date is odd.
 	date, err := time.Parse(DATE_FORMAT, receipt.PurchaseDate)
 	if err != nil {
-		return -1, err // errors.New("Purchase date cannot be parsed")
+		return "-1", err // errors.New("Purchase date cannot be parsed")
 	}
 	day := date.Weekday()
 	if int(day)%2 == 1 {
@@ -72,14 +72,14 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	// 10 points if the time of purchase is after 2:00pm and before 4:00pm
 	purchaseTime, err := time.Parse(TIME_FORMAT, receipt.PurchaseTime)
 	if err != nil {
-		return -1, err // errors.New("Purchase time cannot be parsed")
+		return "-1", err // errors.New("Purchase time cannot be parsed")
 	}
 	if purchaseTime.After(AFTER) && purchaseTime.Before(BEFORE) {
 		points += 10
 	}
 	// store in db
 	db := database.GetInstance().TxTable
-	var id int64 = int64(len(db) + 1)
+	var id = strconv.Itoa(len(db) + 1)
 	db[id] = new(models.Transaction)
 	db[id].Id = id
 	db[id].Receipt = receipt
@@ -87,9 +87,9 @@ func ProcessReceipts(receipt *models.Receipt) (int64, error) {
 	return id, nil
 }
 
-func GetPoints(id int64) (int, error) {
+func GetPoints(id string) (int, error) {
 	db := database.GetInstance().TxTable
-	if db[id] == nil {
+	if db[id] != nil {
 		return db[id].Points, nil
 	} else {
 		return 0, errors.New("No such receipt")

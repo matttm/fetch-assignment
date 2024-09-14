@@ -5,7 +5,6 @@ import (
 	"fetch-assignment/internal/models"
 	"fetch-assignment/internal/services"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -37,12 +36,11 @@ func ProcessReceipts(w http.ResponseWriter, req *http.Request) {
 
 func GetPoints(w http.ResponseWriter, req *http.Request) {
 	id := chi.URLParam(req, "id")
-	receiptId, err := strconv.ParseInt(id, 10, 64)
+	points, err := services.GetPoints(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	points, err := services.GetPoints(receiptId)
 	res := models.GetPointsResponse{
 		Points: points,
 	}

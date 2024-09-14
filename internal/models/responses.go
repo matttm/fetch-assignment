@@ -5,5 +5,5 @@ type GetPointsResponse struct {
 }
 
 type TransactionIdResponse struct {
-	Id int64 `json:"id"`
+	Id string `json:"id"`
 }
