@@ -1,6 +1,6 @@
 package models
 
 type Item struct {
-	ShortDesc string
-	Price     string
+	ShortDescription string
+	Price            string
 }
