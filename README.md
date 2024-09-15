@@ -28,3 +28,14 @@ CONTAINER ID   IMAGE     COMMAND    CREATED          STATUS          PORTS      
 949e5dd02e8a   fetch     "./main"   33 seconds ago   Up 32 seconds   0.0.0.0:55000->8080/tc
 ```
 This indicates that port 55000 on localhost is mapped to 8080 of the container, so be sure to use the host port when trying to interact with the containrer from the host. For instance, I used the address `localhost:55000` when working in Postman.
+
+## Testing
+
+To run the tests, run
+```
+go test -v ./...
+```
+If you want to see more logging, set `LOGGING`, like
+```
+export LOGGING="true"
+```
