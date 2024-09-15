@@ -2,7 +2,6 @@ package database
 
 import (
 	"fetch-assignment/internal/models"
-	"fmt"
 	"sync"
 )
 
@@ -21,11 +20,7 @@ func GetInstance() *Database {
 		if instance == nil {
 			instance = &Database{}
 			instance.TxTable = make(map[string]*models.Transaction)
-		} else {
-			fmt.Println("Single instance already created.")
 		}
-	} else {
-		fmt.Println("Single instance already created.")
 	}
 
 	return instance

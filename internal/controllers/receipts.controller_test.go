@@ -54,16 +54,32 @@ func TestValidReceipts_Process(t *testing.T) {
 		    }
 		  ],
 		  "total": "9.00"
+		}`, `{
+		    "retailer": "Target",
+		    "purchaseDate": "2022-01-02",
+		    "purchaseTime": "13:13",
+		    "total": "1.25",
+		    "items": [
+			{"shortDescription": "Pepsi - 12-oz", "price": "1.25"}
+		    ]
+		}`, `{
+		    "retailer": "Walgreens",
+		    "purchaseDate": "2022-01-02",
+		    "purchaseTime": "08:13",
+		    "total": "2.65",
+		    "items": [
+			{"shortDescription": "Pepsi - 12-oz", "price": "1.25"},
+			{"shortDescription": "Dasani", "price": "1.40"}
+		    ]
 		}`,
 	}
-	var validPointsTable = []int{28, 109}
+	var validPointsTable = []int{28, 109, 31, 15}
 	for idx, v := range validJsonTable {
 		r, err := http.NewRequest("GET", "/receipts/process", bytes.NewReader([]byte(v)))
 		if err != nil {
 			t.Error("Test data cannot be serialized")
 		}
 		recorder := httptest.NewRecorder()
-		println(recorder.Body)
 		ProcessReceipts(recorder, r)
 		if recorder.Code >= 300 {
 			t.Error(recorder.Body)
