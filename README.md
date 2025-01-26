@@ -1,6 +1,6 @@
 # Fetch Assignment
 
-This repository is an API for receipt processot.
+This repository is an API for receipt processing
 
 This is a demonstration of ability in Go.
 
